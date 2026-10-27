@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國語部首大挑戰 - 四上</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            touch-action: manipulation; /* Prevent double-tap zoom on mobile */
+        }
+        
+        /* Custom Animations */
+        @keyframes bounce-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake-err {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
+
+        .anim-correct {
+            animation: bounce-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background-color: #4ade80 !important; /* bg-green-400 */
+            color: white !important;
+            border-color: #16a34a !important; /* border-green-600 */
+            box-shadow: 0 10px 15px -3px rgba(74, 222, 128, 0.5) !important;
+        }
+
+        .anim-wrong {
+            animation: shake-err 0.5s ease-in-out;
+            background-color: #f87171 !important; /* bg-red-400 */
+            color: white !important;
+            border-color: #dc2626 !important; /* border-red-600 */
+        }
+
+        .reveal-correct {
+            background-color: #4ade80 !important;
+            color: white !important;
+            border-color: #16a34a !important;
+            transition: all 0.3s ease;
+        }
+
+        /* Fun button styles */
+        .btn-playful {
+            transition: all 0.2s;
+            box-shadow: 0 6px 0px 0px rgba(0,0,0,0.15);
+        }
+        .btn-playful:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px 0px rgba(0,0,0,0.15);
+        }
+        .btn-playful:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+
+        /* Character display styling */
+        .char-display {
+            text-shadow: 3px 3px 0px #ffe4e6, 6px 6px 0px #fecdd3;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-cyan-100 via-blue-100 to-purple-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- App Container -->
+    <div id="app" class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-6 w-full max-w-lg border-4 border-white relative overflow-hidden">
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="flex flex-col items-center text-center space-y-6 py-4">
+            <div class="space-y-2">
+                <h1 class="text-4xl md:text-5xl font-black text-blue-600 tracking-wider">部首大挑戰</h1>
+                <p class="text-lg text-gray-600 font-bold">康軒四上 國語 1-6 課</p>
+            </div>
+            
+            <div class="w-24 h-24 bg-yellow-300 rounded-full flex items-center justify-center shadow-lg mb-4 animate-bounce">
+                <span class="text-5xl">🎯</span>
+            </div>
+
+            <p class="text-xl text-gray-700 font-bold mb-2">請選擇要挑戰的課文：</p>
+            
+            <div class="grid grid-cols-2 gap-4 w-full">
+                <button onclick="startGame(1)" class="btn-playful bg-blue-400 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-blue-600 hover:bg-blue-300 text-lg">第一課</button>
+                <button onclick="startGame(2)" class="btn-playful bg-orange-400 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-orange-600 hover:bg-orange-300 text-lg">第二課</button>
+                <button onclick="startGame(3)" class="btn-playful bg-green-400 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-green-600 hover:bg-green-300 text-lg">第三課</button>
+                <button onclick="startGame(4)" class="btn-playful bg-purple-400 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-purple-600 hover:bg-purple-300 text-lg">第四課</button>
+                <button onclick="startGame(5)" class="btn-playful bg-pink-400 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-pink-600 hover:bg-pink-300 text-lg">第五課</button>
+                <button onclick="startGame(6)" class="btn-playful bg-teal-400 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-teal-600 hover:bg-teal-300 text-lg">第六課</button>
+            </div>
+            <button onclick="startGame('all')" class="btn-playful w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-6 rounded-xl border-b-4 border-orange-700 hover:opacity-90 text-xl mt-4">
+                🏆 綜合大挑戰 (全部) 🏆
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden flex flex-col items-center space-y-6 py-2">
+            <!-- Header (Progress & Score) -->
+            <div class="flex justify-between w-full items-center px-2">
+                <div class="bg-blue-100 text-blue-700 px-4 py-2 rounded-full font-bold shadow-inner border-2 border-blue-200">
+                    題數: <span id="progress-text">1/15</span>
+                </div>
+                <div class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full font-bold shadow-inner border-2 border-yellow-200 flex items-center gap-1">
+                    <span>⭐</span> 得分: <span id="score-text">0</span>
+                </div>
+            </div>
+
+            <!-- Character Display -->
+            <div class="relative flex items-center justify-center h-48 w-48 md:h-56 md:w-56 bg-white rounded-3xl shadow-xl border-4 border-dashed border-gray-300 my-4">
+                <span id="target-char" class="char-display text-8xl md:text-9xl font-black text-gray-800">字</span>
+            </div>
+            
+            <p class="text-xl font-bold text-gray-600 text-center">這個字的部首是什麼？</p>
+
+            <!-- Choices -->
+            <div id="choices-container" class="grid grid-cols-2 gap-4 w-full">
+                <!-- Buttons injected by JS -->
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden flex flex-col items-center space-y-6 py-8">
+            <h2 class="text-4xl font-black text-pink-600 mb-2">挑戰結束！</h2>
+            
+            <div id="medal-icon" class="text-7xl animate-bounce">🏅</div>
+            
+            <div class="bg-white p-6 rounded-3xl shadow-lg border-4 border-yellow-300 text-center w-full max-w-sm">
+                <p class="text-2xl font-bold text-gray-700 mb-2">你的總得分</p>
+                <p class="text-6xl font-black text-blue-500"><span id="final-score">0</span><span class="text-3xl text-gray-500"> 分</span></p>
+                <p id="result-message" class="mt-4 text-xl font-bold text-orange-500">太棒了！</p>
+            </div>
+
+            <button onclick="showStartScreen()" class="btn-playful bg-blue-500 text-white font-bold py-4 px-8 rounded-xl border-b-4 border-blue-700 hover:bg-blue-400 text-2xl w-full mt-6 flex items-center justify-center gap-2">
+                <span>🔄</span> 再玩一次
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Data derived from user prompt
+        const lessonData = {
+            1: [
+                {char: "串", rad: "丨"}, {char: "泳", rad: "水"}, {char: "般", rad: "舟"}, 
+                {char: "姿", rad: "女"}, {char: "溜", rad: "水"}, {char: "滑", rad: "水"}, 
+                {char: "煩", rad: "火"}, {char: "緩", rad: "糸"}, {char: "遨", rad: "辵"}, 
+                {char: "陀", rad: "阜"}, {char: "螺", rad: "虫"}, {char: "轉", rad: "車"}, 
+                {char: "躍", rad: "足"}, {char: "鷹", rad: "鳥"}, {char: "耳", rad: "耳"}
+            ],
+            2: [
+                {char: "招", rad: "手"}, {char: "湯", rad: "水"}, {char: "拋", rad: "手"}, 
+                {char: "糧", rad: "米"}, {char: "姐", rad: "女"}, {char: "爭", rad: "爪"}, 
+                {char: "警", rad: "言"}, {char: "偷", rad: "人"}, {char: "則", rad: "刀"}, 
+                {char: "繩", rad: "糸"}, {char: "依", rad: "人"}, {char: "捨", rad: "手"}, 
+                {char: "束", rad: "木"}, {char: "暫", rad: "日"}, {char: "幸", rad: "干"}
+            ],
+            3: [
+                {char: "遙", rad: "辵"}, {char: "社", rad: "示"}, {char: "邀", rad: "辵"}, 
+                {char: "與", rad: "臼"}, {char: "投", rad: "手"}, {char: "熟", rad: "火"}, 
+                {char: "巧", rad: "工"}, {char: "彈", rad: "弓"}, {char: "曾", rad: "曰"}, 
+                {char: "揮", rad: "手"}, {char: "彼", rad: "彳"}, {char: "秒", rad: "禾"}, 
+                {char: "弧", rad: "弓"}, {char: "優", rad: "人"}, {char: "喧", rad: "口"}
+            ],
+            4: [
+                {char: "命", rad: "口"}, {char: "奉", rad: "大"}, {char: "治", rad: "水"}, 
+                {char: "捐", rad: "手"}, {char: "偕", rad: "人"}, {char: "堂", rad: "土"}, 
+                {char: "宿", rad: "宀"}, {char: "衛", rad: "行"}, {char: "濃", rad: "水"}, 
+                {char: "嶺", rad: "山"}, {char: "療", rad: "疒"}, {char: "翻", rad: "羽"}, 
+                {char: "醫", rad: "酉"}, {char: "藥", rad: "艸"}, {char: "獻", rad: "犬"}
+            ],
+            5: [
+                {char: "凱", rad: "几"}, {char: "勒", rad: "力"}, {char: "業", rad: "木"}, 
+                {char: "勵", rad: "力"}, {char: "寧", rad: "宀"}, {char: "注", rad: "水"}, 
+                {char: "憑", rad: "心"}, {char: "視", rad: "見"}, {char: "蓓", rad: "艸"}, 
+                {char: "蕾", rad: "艸"}, {char: "何", rad: "人"}, {char: "毯", rad: "毛"}, 
+                {char: "適", rad: "辵"}, {char: "盡", rad: "皿"}, {char: "繽", rad: "糸"}
+            ],
+            6: [
+                {char: "攀", rad: "手"}, {char: "登", rad: "癶"}, {char: "峰", rad: "山"}, 
+                {char: "穆", rad: "禾"}, {char: "磨", rad: "石"}, {char: "酷", rad: "酉"}, 
+                {char: "秀", rad: "禾"}, {char: "氧", rad: "气"}, {char: "谷", rad: "谷"}, 
+                {char: "訓", rad: "言"}, {char: "響", rad: "音"}, {char: "母", rad: "毋"}, 
+                {char: "朗", rad: "月"}, {char: "稱", rad: "禾"}, {char: "瑪", rad: "玉"}
+            ]
+        };
+
+        // Extract all unique radicals for generating distractors
+        const allRadicals = new Set();
+        Object.values(lessonData).forEach(lesson => {
+            lesson.forEach(item => allRadicals.add(item.rad));
+        });
+        const allRadicalsArray = Array.from(allRadicals);
+
+        // Game State Variables
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let isWaitingForNext = false;
+
+        // DOM Elements
+        const screenStart = document.getElementById('start-screen');
+        const screenGame = document.getElementById('game-screen');
+        const screenResult = document.getElementById('result-screen');
+        
+        const progressText = document.getElementById('progress-text');
+        const scoreText = document.getElementById('score-text');
+        const targetChar = document.getElementById('target-char');
+        const choicesContainer = document.getElementById('choices-container');
+        
+        const finalScoreText = document.getElementById('final-score');
+        const resultMessage = document.getElementById('result-message');
+        const medalIcon = document.getElementById('medal-icon');
+
+        // Utility: Shuffle Array
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Setup and Start Game
+        function startGame(lessonKey) {
+            currentQuestions = [];
+            
+            if (lessonKey === 'all') {
+                Object.values(lessonData).forEach(lesson => {
+                    currentQuestions = currentQuestions.concat(lesson);
+                });
+            } else {
+                currentQuestions = [...lessonData[lessonKey]];
+            }
+
+            // Shuffle questions and maybe limit max questions for 'all' to keep it engaging (e.g. 20 questions)
+            shuffle(currentQuestions);
+            if (lessonKey === 'all') {
+                currentQuestions = currentQuestions.slice(0, 20); // Limit to 20 random questions if all is selected
+            }
+
+            currentIndex = 0;
+            score = 0;
+            
+            updateScoreDisplay();
+            
+            screenStart.classList.add('hidden');
+            screenResult.classList.add('hidden');
+            screenGame.classList.remove('hidden');
+            screenGame.classList.add('flex');
+
+            loadQuestion();
+        }
+
+        // Load Question Data into UI
+        function loadQuestion() {
+            isWaitingForNext = false;
+            const currentQ = currentQuestions[currentIndex];
+            
+            // Update Header
+            progressText.innerText = `${currentIndex + 1}/${currentQuestions.length}`;
+            targetChar.innerText = currentQ.char;
+
+            // Generate Options (1 correct, 3 distractors)
+            let options = [currentQ.rad];
+            
+            // Get random distractors not equal to correct answer
+            let possibleDistractors = allRadicalsArray.filter(rad => rad !== currentQ.rad);
+            shuffle(possibleDistractors);
+            
+            options.push(possibleDistractors[0]);
+            options.push(possibleDistractors[1]);
+            options.push(possibleDistractors[2]);
+            
+            shuffle(options);
+
+            // Render Options
+            choicesContainer.innerHTML = '';
+            const colors = ['bg-rose-400 border-rose-600', 'bg-indigo-400 border-indigo-600', 'bg-emerald-400 border-emerald-600', 'bg-amber-400 border-amber-600'];
+            shuffle(colors);
+
+            options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                // Base classes
+                btn.className = `btn-playful text-white font-bold py-5 px-4 rounded-2xl border-b-4 text-3xl md:text-4xl shadow-md ${colors[index]} hover:opacity-90`;
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(btn, opt, currentQ.rad);
+                // Store whether it's correct for revealing later
+                if(opt === currentQ.rad) {
+                    btn.dataset.correct = "true";
+                }
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        // Handle Answer Selection
+        function handleAnswer(btn, selectedRadical, correctRadical) {
+            if (isWaitingForNext) return;
+            isWaitingForNext = true;
+
+            const allButtons = choicesContainer.querySelectorAll('button');
+            
+            // Disable all buttons immediately
+            allButtons.forEach(b => b.disabled = true);
+
+            if (selectedRadical === correctRadical) {
+                // Correct
+                btn.classList.add('anim-correct');
+                score += 10;
+                updateScoreDisplay();
+                setTimeout(() => nextQuestion(), 800); // slightly faster on correct
+            } else {
+                // Wrong
+                btn.classList.add('anim-wrong');
+                
+                // Highlight the correct one
+                allButtons.forEach(b => {
+                    if (b.dataset.correct === "true") {
+                        b.classList.add('reveal-correct');
+                    }
+                });
+
+                setTimeout(() => nextQuestion(), 1500); // longer wait on wrong so they see correct answer
+            }
+        }
+
+        function updateScoreDisplay() {
+            scoreText.innerText = score;
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        // End Game and Show Results
+        function endGame() {
+            screenGame.classList.add('hidden');
+            screenGame.classList.remove('flex');
+            
+            screenResult.classList.remove('hidden');
+            screenResult.classList.add('flex');
+
+            finalScoreText.innerText = score;
+
+            // Calculate percentage
+            const maxScore = currentQuestions.length * 10;
+            const percentage = score / maxScore;
+
+            if (percentage === 1) {
+                resultMessage.innerText = "太完美了！你是部首小精靈！💯";
+                medalIcon.innerText = "🏆";
+            } else if (percentage >= 0.8) {
+                resultMessage.innerText = "非常厲害！繼續保持喔！🌟";
+                medalIcon.innerText = "🥇";
+            } else if (percentage >= 0.6) {
+                resultMessage.innerText = "表現不錯！再挑戰一次拿滿分吧！👍";
+                medalIcon.innerText = "🥈";
+            } else {
+                resultMessage.innerText = "多練習幾次，你會越來越棒的！💪";
+                medalIcon.innerText = "🥉";
+            }
+        }
+
+        // Show Start Screen to Play Again
+        function showStartScreen() {
+            screenResult.classList.add('hidden');
+            screenResult.classList.remove('flex');
+            
+            screenStart.classList.remove('hidden');
+            screenStart.classList.add('flex');
+        }
+
+    </script>
+</body>
+</html>
